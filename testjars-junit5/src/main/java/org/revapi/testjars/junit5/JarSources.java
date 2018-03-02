@@ -21,6 +21,9 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.revapi.testjars.CompiledJar;
+
 /**
  * This annotation is used to specify the sources from which the {@link CompiledJar} should be produced. The field
  * annotated by this annotation can either have type {@link CompiledJar} or alternatively
