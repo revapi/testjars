@@ -1,5 +1,7 @@
 == Testjars
 
+image:https://travis-ci.org/revapi/testjars.svg?branch=master[Build Status,link=https://travis-ci.org/revapi/testjars]
+
 If you need a bunch of jar files you need to use in your tests, not as dependencies, but as artifacts you
 need to use in the tests, you may have wondered how to do that without resorting to storing the jars in source
 control or having an elaborate build set up where test archives would be built prior to the tests needing them.
