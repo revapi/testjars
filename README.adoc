@@ -1,0 +1,55 @@
+== Testjars
+
+If you need a bunch of jar files you need to use in your tests, not as dependencies, but as artifacts you
+need to use in the tests, you may have wondered how to do that without resorting to storing the jars in source
+control or having an elaborate build set up where test archives would be built prior to the tests needing them.
+
+This library brings simplicity to the picture. No need to invoke the compiler yourself, automatic cleanup taken care
+of.
+
+In JUnit5 all you need to do is:
+
+```java
+
+@ExtendWith(CompiledJarExtension.class)
+class MyTestClass {
+
+    @JarSources(root = "/sources-on-classpath/", sources = {"a/MyClass.java", "b/MyOtherClass.java"})
+    private CompiledJar jarFile;
+
+    @Test
+    void test() {
+        //directory containing the compiled classes
+        jarFile.classes();
+
+        //the actual jar file containing the compiled sources
+        jarFile.jarFile();
+
+        CompiledJar.Environment env = jarFile.analyze();
+
+        //analyze the compiled classes as if in annotation processor
+        TypeElement myClass = env.elements().getTypeElement("a.MyClass");
+    }
+}
+```
+
+In JUnit4 you can:
+
+```java
+
+public class MyTestClass {
+
+    @Rule
+    public Jar jar = new Jar();
+
+    @Test
+    public void test() {
+        CompiledJar jarFile = jar.from()
+            .classpathSources("/sources-on-classpath/", "a/MyClass.java", "b/MyOtherClass.java")
+            .build();
+
+        // now it works the same as above
+    }
+}
+
+```

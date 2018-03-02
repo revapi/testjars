@@ -1,0 +1,26 @@
+language: java
+jdk:
+  - oraclejdk9
+
+notifications:
+  email: false
+
+sudo: false
+
+#force travis to use a newer version of Java8.
+addons:
+  apt:
+    packages:
+      - oracle-java9-installer
+
+cache:
+  directories:
+    - $HOME/.m2
+
+#delete all our historic build artifacts so that the stale versions do
+#not pollute the build.
+before_script:
+  - rm -Rf $HOME/.m2/repository/org/revapi
+
+script:
+  - mvn clean verify --batch-mode --fail-at-end
