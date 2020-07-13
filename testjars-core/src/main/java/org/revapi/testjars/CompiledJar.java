@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2020 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,9 @@
 package org.revapi.testjars;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import javax.annotation.Nullable;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -29,12 +32,13 @@ import javax.lang.model.util.Types;
 public final class CompiledJar {
     private final File jarFile;
     private final File classes;
-    private File[] classpath;
+    private final List<File> classpath;
     private final CompilerManager compiler;
 
-    CompiledJar(File jarFile, File classes, CompilerManager compiler) {
+    CompiledJar(File jarFile, File classes, File[] classpath, CompilerManager compiler) {
         this.jarFile = jarFile;
         this.classes = classes;
+        this.classpath = classpath == null ? Collections.emptyList() : Arrays.asList(classpath);
         this.compiler = compiler;
     }
 
@@ -54,17 +58,9 @@ public final class CompiledJar {
     }
 
     /**
-     * Additional jar files to be put on the classpath when analyzing the compiled jar file.
-     * <p>
-     * Note that these files are not managed and will not be cleaned up after the test finishes automatically.
-     *
-     * @param jarFiles the jar files to be put on the classpath
+     * The classpath this jar was compiled with.
      */
-    public void classpath(File... jarFiles) {
-        classpath = jarFiles;
-    }
-
-    public File[] classpath() {
+    public List<File> classpath() {
         return classpath;
     }
 

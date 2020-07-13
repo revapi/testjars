@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2020 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +16,17 @@
  */
 package org.revapi.testjars;
 
-import static java.util.Collections.singletonList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.TypeElement;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -40,26 +49,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.jar.JarOutputStream;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.TypeElement;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Takes care of compiling jar files. Keeps track of what was compiled and can delete the files afterwards using the
@@ -80,7 +81,11 @@ public final class CompilerManager {
      * @return a builder to gather sources and resources to compile and compose a jar file
      */
     public JarBuilder createJar() {
-        return new JarBuilder();
+        return createJar(new NoopDependencyResolver());
+    }
+
+    public JarBuilder createJar(DependencyResolver dependencyResolver) {
+        return new JarBuilder(dependencyResolver);
     }
 
     /**
@@ -93,7 +98,23 @@ public final class CompilerManager {
      * @return object using which the classes within the jar file can be inspected.
      */
     public CompiledJar jarFrom(File jarFile) {
-        return new CompiledJar(jarFile, null, this);
+        return jarFrom(jarFile, new File[0]);
+    }
+
+
+    /**
+     * If you already have a compiled jar file, you can start analyzing its contents using this method.
+     * <p>
+     * Note that the files are not automatically deleted after a test as would a jar file built using the
+     * {@link #createJar()} method. If you want this file to also be cleaned up, use the {@link #manage(File)} method.
+     *
+     * @param jarFile the jar file to analyze
+     * @param dependencies the additional dependencies that need to be present on the classpath to be able to analyze
+     *                     the jar file
+     * @return object using which the classes within the jar file can be inspected.
+     */
+    public CompiledJar jarFrom(File jarFile, File... dependencies) {
+        return new CompiledJar(jarFile, null, dependencies, this);
     }
 
     /**
@@ -142,10 +163,10 @@ public final class CompilerManager {
             throw new IllegalArgumentException("Failed to create directory " + dir.getAbsolutePath());
         }
 
-        String classpathString = compiledJar.classpath() == null
+        String classpathString = compiledJar.classpath().isEmpty()
                 ? compiledJar.jarFile().getAbsolutePath()
-                : Stream.concat(Stream.of(compiledJar.jarFile()), Stream.of(compiledJar.classpath()))
-                .map(File::getAbsolutePath).collect(Collectors.joining(File.pathSeparator));
+                : Stream.concat(Stream.of(compiledJar.jarFile()), compiledJar.classpath().stream())
+                .map(File::getAbsolutePath).collect(joining(File.pathSeparator));
 
         List<String> options = Arrays.asList("-cp", classpathString,
                 "-d", dir.getAbsolutePath());
@@ -214,10 +235,13 @@ public final class CompilerManager {
     }
 
     public final class JarBuilder {
+        private final DependencyResolver dependencyResolver;
+        private final List<File> dependencies = new ArrayList<>();
         private Map<URI, JavaFileObject> sources = new HashMap<>();
         private Map<URI, InputStream> resources = new HashMap<>();
 
-        private JarBuilder() {
+        private JarBuilder(DependencyResolver dependencyResolver) {
+            this.dependencyResolver = dependencyResolver;
         }
 
         /**
@@ -301,6 +325,28 @@ public final class CompilerManager {
             return this;
         }
 
+        public JarBuilder dependencies(String identifier, String... moreIdentifiers) {
+            for (int i = -1; i < moreIdentifiers.length; ++i) {
+                String id = i == -1 ? identifier : moreIdentifiers[i];
+                dependencies.addAll(dependencyResolver.resolve(id));
+            }
+            return this;
+        }
+
+        /**
+         * Unlike with {@link #dependencies(String, String...)} where the configured dependency resolver is responsible
+         * to locate all the transitive dependencies, using this "manual" method, the caller needs to make sure that
+         * the provided dependencies are complete, i.e. that all the transitive dependencies are also supplied.
+         *
+         * @param jarFile the jar file of the dependency
+         * @param jarFiles other dependencies
+         */
+        public JarBuilder dependencies(File jarFile, File... jarFiles) {
+            dependencies.add(jarFile);
+            dependencies.addAll(Arrays.asList(jarFiles));
+            return this;
+        }
+
         /**
          * Compiles the sources and composes a jar file that comprises of the class files on the specified locations
          * (defined by {@link #classPathSources(String, String...)} et al.) along with some resources on the specified
@@ -319,7 +365,14 @@ public final class CompilerManager {
 
             List<JavaFileObject> sourceObjects = new ArrayList<>(sources.values());
 
-            List<String> options = Arrays.asList("-d", compiledSourcesOutput.getAbsolutePath());
+            List<String> options = new ArrayList<>(4);
+            options.add("-d");
+            options.add(compiledSourcesOutput.getAbsolutePath());
+            if (!dependencies.isEmpty()) {
+                options.add("-cp");
+                options.add(dependencies.stream()
+                        .map(File::getAbsolutePath).collect(joining(File.pathSeparator)));
+            }
 
             JavaCompiler.CompilationTask firstCompilation = compiler.getTask(null, null, null, options, null, sourceObjects);
             if (!firstCompilation.call()) {
@@ -406,7 +459,7 @@ public final class CompilerManager {
 
             compiledStuff.put(dir, null);
 
-            return new CompiledJar(compiledJar, compiledSourcesOutput, CompilerManager.this);
+            return new CompiledJar(compiledJar, compiledSourcesOutput, dependencies.toArray(new File[0]), CompilerManager.this);
         }
 
         private URI toUri(String path) {
@@ -415,6 +468,14 @@ public final class CompilerManager {
             } else {
                 return URI.create(path);
             }
+        }
+    }
+
+    private static final class NoopDependencyResolver implements DependencyResolver {
+
+        @Override
+        public Set<File> resolve(String identifier) {
+            return emptySet();
         }
     }
 }

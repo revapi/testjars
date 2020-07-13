@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2020 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,8 +39,19 @@ import org.revapi.testjars.CompiledJar;
 @Repeatable(AllJarSources.class)
 public @interface JarSources {
     /**
+     * The optional name of the jar file generated. This can be used to reference the generated jar file as
+     * a dependency of another compiled jar.
+     *
+     * <p>If there is more than 1 jar source present on a field, only one of them can have a name specified which serves
+     * as the name for the jar file compiled.
+     *
+     * @see Dependencies#resolver()
+     */
+    String name() default "";
+
+    /**
      * The root path on the classpath to which all the {@link #sources()} are relative to. The compiled classes will
-     * mimic the directory structure under the root. Thi path must end with a "/".
+     * mimic the directory structure under the root. This path must end with a "/".
      */
     String root() default "";
 

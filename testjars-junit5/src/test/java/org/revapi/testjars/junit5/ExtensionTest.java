@@ -16,6 +16,7 @@
  */
 package org.revapi.testjars.junit5;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -42,6 +43,13 @@ class ExtensionTest {
     @JarSources(root = "/", sources = "TestAnotherClass.java")
     private CompiledJar.Environment env2;
 
+    @JarSources(name = "base", root = "/", sources = "TestClass.java")
+    private CompiledJar baseJar;
+
+    @JarSources(root = "/", sources = "DependentTestClass.java")
+    @Dependencies("base")
+    private CompiledJar depByNameJar;
+
     @Test
     void testJar() {
         assertNotNull(jar.jarFile());
@@ -61,6 +69,12 @@ class ExtensionTest {
     @Test
     void testEnv2() throws Exception {
         testEnv(env2);
+    }
+
+    @Test
+    void testDependentJars() throws Exception {
+        assertEquals(1, depByNameJar.classpath().size());
+        assertEquals(baseJar.jarFile(), depByNameJar.classpath().get(0));
     }
 
     private static void testEnv(CompiledJar.Environment env) throws Exception {

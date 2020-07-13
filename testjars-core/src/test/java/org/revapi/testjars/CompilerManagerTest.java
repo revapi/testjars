@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2020 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,18 +16,21 @@
  */
 package org.revapi.testjars;
 
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.jar.JarFile;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 class CompilerManagerTest {
-    private CompilerManager compilerManager = new CompilerManager();
+    private final CompilerManager compilerManager = new CompilerManager();
 
     @AfterEach
     void tearDown() {
@@ -36,7 +39,7 @@ class CompilerManagerTest {
 
     @Test
     void shouldBuildJarFromClassPath() throws Exception {
-        CompiledJar output = compilerManager.createJar().classPathSources(null,"Root.java").build();
+        CompiledJar output = compilerManager.createJar().classPathSources(null, "Root.java").build();
         assertTrue(output.jarFile().exists());
 
         JarFile jf = new JarFile(output.jarFile());
@@ -92,5 +95,35 @@ class CompilerManagerTest {
         CompiledJar.Environment env = output.analyze();
 
         assertNotNull(env.elements().getTypeElement("pkg.ClassInPackage"));
+    }
+
+    @Test
+    void shouldCompileWithDependenciesUsingResolver() throws Exception {
+        CompiledJar dep = compilerManager.createJar().classPathSources("/deps/dep/", "Dep.java").build();
+
+        compilerManager
+                .createJar(id -> {
+                    if ("dep".equals(id)) {
+                        return singleton(dep.jarFile());
+                    } else {
+                        return emptySet();
+                    }
+                })
+                .classPathSources("/deps/main/", "Main.java")
+                .dependencies("dep").build();
+
+        // cool, it's enough for us to know that the above compilation passed.
+    }
+
+    @Test
+    void shouldCompileWithDependenciesUsingFiles() throws Exception {
+        CompiledJar dep = compilerManager.createJar().classPathSources("/deps/dep/", "Dep.java").build();
+
+        compilerManager.createJar()
+                .classPathSources("/deps/main/", "Main.java")
+                .dependencies(dep.jarFile())
+                .build();
+
+        // cool, it's enough for us to know that the above compilation passed.
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2020 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.revapi.testjars.CompiledJar;
 import org.revapi.testjars.CompilerManager;
+import org.revapi.testjars.DependencyResolver;
 
 /**
  * <p>This class can be used in tests to make it easy to compile custom source code into jars and then use the Java
@@ -77,6 +78,13 @@ public class Jar implements TestRule {
      */
     public CompilerManager.JarBuilder from() {
         return compilerManager.createJar();
+    }
+
+    /**
+     * Calls {@link CompilerManager#createJar(DependencyResolver)}.
+     */
+    public CompilerManager.JarBuilder from(DependencyResolver resolver) {
+        return compilerManager.createJar(resolver);
     }
 
     /**

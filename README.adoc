@@ -9,7 +9,7 @@ control or having an elaborate build set up where test archives would be built p
 This library brings simplicity to the picture. No need to invoke the compiler yourself, automatic cleanup taken care
 of.
 
-In JUnit5 all you need to do is:
+=== JUnit 5
 
 ```java
 
@@ -35,7 +35,43 @@ class MyTestClass {
 }
 ```
 
-In JUnit4 you can:
+==== Dependencies
+
+It is possible to declare dependencies between the jars or declare a dependency on a 3rd party archive using some
+resolver.
+
+Declaring dependencies between 2 compiled jars is as simple as assigning names to the jars and then using those names
+in the `@Dependencies` annotation like this:
+
+```java
+@ExtendWith(CompiledJarExtension.class)
+class MyTestClass {
+
+    @JarSources(name = "core", root = "/sources-on-classpath/", sources = {"a/MyClass.java", "b/MyOtherClass.java"})
+    private CompiledJar coreJar;
+
+    @JarSources(root = "/sources-on-classpath/", sources = {"a/MyClass.java", "b/MyOtherClass.java"})
+    @Dependencies({"core"})
+    private CompiledJar implJar;
+
+    // ...
+}
+```
+
+Using a custom resolver is also possible:
+
+```java
+@ExtendWith(CompiledJarExtension.class)
+class MyTestClass {
+    @JarSources(root = "/sources-on-classpath/", sources = {"a/MyClass.java", "b/MyOtherClass.java"})
+    @Dependencies(resolver = MavenCacheDependencyResolver.class, value = {"com.acme:acme-api:42.0"})
+    private CompiledJar jar;
+
+    // ...
+}
+```
+
+=== JUnit 4
 
 ```java
 
@@ -54,4 +90,39 @@ public class MyTestClass {
     }
 }
 
+```
+
+==== Dependencies
+
+```java
+public class MyTestClass {
+
+    @Rule
+    public Jar jar = new Jar();
+
+    @Test
+    public void test1() {
+        CompiledJar jarFile = jar.from(new MavenCacheDependencyResolver())
+            .classpathSources("/sources-on-classpath/", "a/MyClass.java", "b/MyOtherClass.java")
+            .dependencies("com.acme:my-dep:42.0", "com.google:guava:132")
+            .build();
+
+        // ...
+    }
+
+
+    @Test
+    public void test1() {
+        CompiledJar baseJar = jar.from()
+            .classpathSources("/sources-on-classpath/", "a/MyClass.java", "b/MyOtherClass.java")
+            .build();
+
+        CompiledJar jarFile = jar.from(new MavenCacheDependencyResolver())
+            .classpathSources("/sources-on-classpath/", "dep/DepClass.java")
+            .dependencies(baseJar.jarFile())
+            .build();
+
+        // ...
+    }
+}
 ```
