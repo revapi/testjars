@@ -16,18 +16,17 @@
  */
 package org.revapi.testjars;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.jar.JarFile;
+
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Optional;
-import java.util.jar.JarFile;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
 
 class CompilerManagerTest {
     private final CompilerManager compilerManager = new CompilerManager();

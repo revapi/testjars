@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URI;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,7 +49,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -74,6 +73,8 @@ public final class CompilerManager {
     private Map<File, Semaphore> compiledStuff = new HashMap<>();
 
     private ExecutorService compileProcess = Executors.newCachedThreadPool();
+
+    private File compileRoot;
 
     /**
      * Instantiates a builder using which the contents of a compiled jar file can be composed.
@@ -108,7 +109,7 @@ public final class CompilerManager {
      * Note that the files are not automatically deleted after a test as would a jar file built using the
      * {@link #createJar()} method. If you want this file to also be cleaned up, use the {@link #manage(File)} method.
      *
-     * @param jarFile the jar file to analyze
+     * @param jarFile      the jar file to analyze
      * @param dependencies the additional dependencies that need to be present on the classpath to be able to analyze
      *                     the jar file
      * @return object using which the classes within the jar file can be inspected.
@@ -130,35 +131,48 @@ public final class CompilerManager {
      * If you're using the Jar instance as a JUnit rule, you don't have to call this method. Otherwise this can be used
      * to remove the compiled jar files from the filesystem.
      */
-    @SuppressWarnings({"ResultOfMethodCallIgnored", "ConstantConditions"})
     public void cleanUp() {
         for (Map.Entry<File, Semaphore> e : compiledStuff.entrySet()) {
             if (e.getValue() != null) {
                 e.getValue().release();
             }
 
-            try {
-                Files.walkFileTree(e.getKey().toPath(), new SimpleFileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                        Files.delete(file);
-                        return FileVisitResult.CONTINUE;
-                    }
+            deleteRecursively(e.getKey());
+        }
 
-                    @Override
-                    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                        Files.delete(dir);
-                        return FileVisitResult.CONTINUE;
-                    }
-                });
-            } catch (IOException ex) {
-                LOG.warn("Failed to clean up directory " + e.getKey().getAbsolutePath(), ex);
-            }
+        if (compileRoot != null) {
+            deleteRecursively(compileRoot);
+        }
+
+        compiledStuff.clear();
+        compileRoot = null;
+    }
+
+    private void deleteRecursively(File dir) {
+        try {
+            Files.walkFileTree(dir.toPath(), new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException ex) {
+            LOG.warn("Failed to clean up directory " + dir.getAbsolutePath(), ex);
         }
     }
 
-    CompiledJar.Environment probe(CompiledJar compiledJar) {
-        File dir = new File(compiledJar.jarFile().getParent(), "probe");
+    CompiledJar.Environment probe(CompiledJar compiledJar) throws IOException {
+        File dir = compiledJar.jarFile().toPath().startsWith(getCompileRoot().toPath())
+                ? new File(compiledJar.jarFile().getParent(), "probe")
+                : new File(getCompileRoot(), compiledJar.jarFile().getName() + "-probe");
+
         if (!dir.mkdirs()) {
             throw new IllegalArgumentException("Failed to create directory " + dir.getAbsolutePath());
         }
@@ -176,7 +190,7 @@ public final class CompilerManager {
         sourceObjects.add(new ArchiveProbeObject());
 
         StandardJavaFileManager fileManager = compiler
-                .getStandardFileManager(null, Locale.getDefault(), Charset.forName("UTF-8"));
+                .getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8);
 
         JavaCompiler.CompilationTask task = compiler
                 .getTask(new PrintWriter(System.out), fileManager, null, options, singletonList(ArchiveProbeObject.CLASS_NAME), sourceObjects);
@@ -232,6 +246,14 @@ public final class CompilerManager {
         compiledStuff.put(compiledJar.jarFile().getParentFile(), cleanUpSemaphore);
 
         return ret;
+    }
+
+    private File getCompileRoot() throws IOException {
+        if (compileRoot == null) {
+            compileRoot = Files.createTempDirectory("revapi-testjars").toFile();
+        }
+
+        return compileRoot;
     }
 
     public final class JarBuilder {
@@ -338,7 +360,7 @@ public final class CompilerManager {
          * to locate all the transitive dependencies, using this "manual" method, the caller needs to make sure that
          * the provided dependencies are complete, i.e. that all the transitive dependencies are also supplied.
          *
-         * @param jarFile the jar file of the dependency
+         * @param jarFile  the jar file of the dependency
          * @param jarFiles other dependencies
          */
         public JarBuilder dependencies(File jarFile, File... jarFiles) {
@@ -356,7 +378,7 @@ public final class CompilerManager {
          * @throws IOException on error
          */
         public CompiledJar build() throws IOException {
-            File dir = Files.createTempDirectory("revapi-testjars").toFile();
+            File dir = Files.createTempDirectory(getCompileRoot().toPath(), "jar").toFile();
 
             File compiledSourcesOutput = new File(dir, "classes");
             if (!compiledSourcesOutput.mkdirs()) {

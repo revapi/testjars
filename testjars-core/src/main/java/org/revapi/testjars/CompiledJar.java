@@ -17,6 +17,7 @@
 package org.revapi.testjars;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -69,7 +70,11 @@ public final class CompiledJar {
      * {@link Elements} and {@link Types} instances that can be used to analyze the compiled classes.
      */
     public Environment analyze() {
-        return compiler.probe(this);
+        try {
+            return compiler.probe(this);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to analyze the compiled jar " + jarFile, e);
+        }
     }
 
     public static final class Environment {

@@ -14,6 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public class DependentTestClass {
-    TestClass field;
+package org.revapi.testjars.resolver.maven;
+
+import org.eclipse.aether.AbstractRepositoryListener;
+
+final class SilentRepositoryListener extends AbstractRepositoryListener {
 }

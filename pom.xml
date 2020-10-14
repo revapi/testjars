@@ -90,5 +90,6 @@
         <module>testjars-core</module>
         <module>testjars-junit4</module>
         <module>testjars-junit5</module>
+        <module>testjars-maven-resolver</module>
     </modules>
 </project>
