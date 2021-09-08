@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 Lukas Krejci
+ * Copyright 2018-2021 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,8 @@
  */
 package org.revapi.testjars.resolver.maven;
 
+import java.io.File;
+
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -27,8 +29,6 @@ import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.transport.file.FileTransporterFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
-
-import java.io.File;
 
 /**
  *
@@ -53,7 +53,7 @@ public final class MavenBootstrap {
     }
 
     public static DefaultRepositorySystemSession newRepositorySystemSession(RepositorySystem system,
-                                                                            LocalRepository localRepo) {
+            LocalRepository localRepo) {
 
         DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
 
@@ -66,14 +66,11 @@ public final class MavenBootstrap {
     }
 
     public static RemoteRepository mavenCentral() {
-        return new RemoteRepository.Builder("central", "default",
-                "https://repo.maven.apache.org/maven2/")
-                .build();
+        return new RemoteRepository.Builder("central", "default", "https://repo.maven.apache.org/maven2/").build();
     }
 
     public static LocalRepository homeM2Repository() {
-        File localMaven = new File(new File(System.getProperties().getProperty("user.home"), ".m2"),
-                "repository");
+        File localMaven = new File(new File(System.getProperties().getProperty("user.home"), ".m2"), "repository");
         return new LocalRepository(localMaven);
     }
 }

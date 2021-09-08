@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 Lukas Krejci
+ * Copyright 2018-2021 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,17 +16,10 @@
  */
 package org.revapi.testjars;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.joining;
 
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.TypeElement;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -57,9 +50,17 @@ import java.util.jar.JarOutputStream;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 
-import static java.util.Collections.emptySet;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.joining;
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.TypeElement;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Takes care of compiling jar files. Keeps track of what was compiled and can delete the files afterwards using the
@@ -95,13 +96,14 @@ public final class CompilerManager {
      * Note that this file is not automatically deleted after a test as would a jar file built using the
      * {@link #createJar()} method. If you want this file to also be cleaned up, use the {@link #manage(File)} method.
      *
-     * @param jarFile the jar file to analyze
+     * @param jarFile
+     *            the jar file to analyze
+     * 
      * @return object using which the classes within the jar file can be inspected.
      */
     public CompiledJar jarFrom(File jarFile) {
         return jarFrom(jarFile, new File[0]);
     }
-
 
     /**
      * If you already have a compiled jar file, you can start analyzing its contents using this method.
@@ -109,9 +111,12 @@ public final class CompilerManager {
      * Note that the files are not automatically deleted after a test as would a jar file built using the
      * {@link #createJar()} method. If you want this file to also be cleaned up, use the {@link #manage(File)} method.
      *
-     * @param jarFile      the jar file to analyze
-     * @param dependencies the additional dependencies that need to be present on the classpath to be able to analyze
-     *                     the jar file
+     * @param jarFile
+     *            the jar file to analyze
+     * @param dependencies
+     *            the additional dependencies that need to be present on the classpath to be able to analyze the jar
+     *            file
+     * 
      * @return object using which the classes within the jar file can be inspected.
      */
     public CompiledJar jarFrom(File jarFile, File... dependencies) {
@@ -121,7 +126,8 @@ public final class CompilerManager {
     /**
      * Given file will be automatically cleaned up after the test.
      *
-     * @param jarFile a file to delete once the test is finished.
+     * @param jarFile
+     *            a file to delete once the test is finished.
      */
     public void manage(File jarFile) {
         compiledStuff.put(jarFile, null);
@@ -177,24 +183,21 @@ public final class CompilerManager {
             throw new IllegalArgumentException("Failed to create directory " + dir.getAbsolutePath());
         }
 
-        String classpathString = compiledJar.classpath().isEmpty()
-                ? compiledJar.jarFile().getAbsolutePath()
+        String classpathString = compiledJar.classpath().isEmpty() ? compiledJar.jarFile().getAbsolutePath()
                 : Stream.concat(Stream.of(compiledJar.jarFile()), compiledJar.classpath().stream())
-                .map(File::getAbsolutePath).collect(joining(File.pathSeparator));
+                        .map(File::getAbsolutePath).collect(joining(File.pathSeparator));
 
-        List<String> options = Arrays.asList("-cp", classpathString,
-                "-d", dir.getAbsolutePath());
+        List<String> options = Arrays.asList("-cp", classpathString, "-d", dir.getAbsolutePath());
 
         List<JavaFileObject> sourceObjects = new ArrayList<>(2);
         sourceObjects.add(new MarkerAnnotationObject());
         sourceObjects.add(new ArchiveProbeObject());
 
-        StandardJavaFileManager fileManager = compiler
-                .getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8);
+        StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(),
+                StandardCharsets.UTF_8);
 
-        JavaCompiler.CompilationTask task = compiler
-                .getTask(new PrintWriter(System.out), fileManager, null, options, singletonList(ArchiveProbeObject.CLASS_NAME), sourceObjects);
-
+        JavaCompiler.CompilationTask task = compiler.getTask(new PrintWriter(System.out), fileManager, null, options,
+                singletonList(ArchiveProbeObject.CLASS_NAME), sourceObjects);
 
         final Semaphore cleanUpSemaphore = new Semaphore(0);
         final Semaphore initSemaphore = new Semaphore(0);
@@ -270,8 +273,11 @@ public final class CompilerManager {
          * Finds given sources under given root in the classpath. The resulting jar file will contain the compiled
          * classes on the same relatives paths as the provided sources.
          *
-         * @param root    the root path in the classloader to resolve the sources against
-         * @param sources the list of relative paths on which the source files are located in the classloader
+         * @param root
+         *            the root path in the classloader to resolve the sources against
+         * @param sources
+         *            the list of relative paths on which the source files are located in the classloader
+         * 
          * @return this instance
          */
         public JarBuilder classPathSources(String root, String... sources) {
@@ -288,12 +294,16 @@ public final class CompilerManager {
         }
 
         /**
-         * Adds given resources to the compiled jar file. The paths to the resources are resolved in the same way
-         * as with sources.
+         * Adds given resources to the compiled jar file. The paths to the resources are resolved in the same way as
+         * with sources.
          *
-         * @param root      the root against which to resolve the resource paths in the classloader
-         * @param resources the relative paths of the resources
+         * @param root
+         *            the root against which to resolve the resource paths in the classloader
+         * @param resources
+         *            the relative paths of the resources
+         * 
          * @return this instance
+         * 
          * @see #classPathSources(String, String...)
          */
         public JarBuilder classPathResources(String root, String... resources) {
@@ -357,11 +367,13 @@ public final class CompilerManager {
 
         /**
          * Unlike with {@link #dependencies(String, String...)} where the configured dependency resolver is responsible
-         * to locate all the transitive dependencies, using this "manual" method, the caller needs to make sure that
-         * the provided dependencies are complete, i.e. that all the transitive dependencies are also supplied.
+         * to locate all the transitive dependencies, using this "manual" method, the caller needs to make sure that the
+         * provided dependencies are complete, i.e. that all the transitive dependencies are also supplied.
          *
-         * @param jarFile  the jar file of the dependency
-         * @param jarFiles other dependencies
+         * @param jarFile
+         *            the jar file of the dependency
+         * @param jarFiles
+         *            other dependencies
          */
         public JarBuilder dependencies(File jarFile, File... jarFiles) {
             dependencies.add(jarFile);
@@ -375,7 +387,9 @@ public final class CompilerManager {
          * locations (defined by {@link #classPathResources(String, String...)} et al.).
          *
          * @return an object to access the results of the compilation
-         * @throws IOException on error
+         * 
+         * @throws IOException
+         *             on error
          */
         public CompiledJar build() throws IOException {
             File dir = Files.createTempDirectory(getCompileRoot().toPath(), "jar").toFile();
@@ -392,11 +406,11 @@ public final class CompilerManager {
             options.add(compiledSourcesOutput.getAbsolutePath());
             if (!dependencies.isEmpty()) {
                 options.add("-cp");
-                options.add(dependencies.stream()
-                        .map(File::getAbsolutePath).collect(joining(File.pathSeparator)));
+                options.add(dependencies.stream().map(File::getAbsolutePath).collect(joining(File.pathSeparator)));
             }
 
-            JavaCompiler.CompilationTask firstCompilation = compiler.getTask(null, null, null, options, null, sourceObjects);
+            JavaCompiler.CompilationTask firstCompilation = compiler.getTask(null, null, null, options, null,
+                    sourceObjects);
             if (!firstCompilation.call()) {
                 throw new IllegalStateException("Failed to compile the sources");
             }
@@ -406,7 +420,8 @@ public final class CompilerManager {
                 File parent = target.getParentFile();
                 if (!parent.exists()) {
                     if (!parent.mkdirs()) {
-                        throw new IllegalStateException("Failed to create directory " + target.getParentFile().getAbsolutePath());
+                        throw new IllegalStateException(
+                                "Failed to create directory " + target.getParentFile().getAbsolutePath());
                     }
                 }
                 Files.copy(e.getValue(), target.toPath());
@@ -481,7 +496,8 @@ public final class CompilerManager {
 
             compiledStuff.put(dir, null);
 
-            return new CompiledJar(compiledJar, compiledSourcesOutput, dependencies.toArray(new File[0]), CompilerManager.this);
+            return new CompiledJar(compiledJar, compiledSourcesOutput, dependencies.toArray(new File[0]),
+                    CompilerManager.this);
         }
 
         private URI toUri(String path) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 Lukas Krejci
+ * Copyright 2018-2021 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,21 +29,24 @@ import org.revapi.testjars.CompiledJar;
  * annotated by this annotation can either have type {@link CompiledJar} or alternatively
  * {@link CompiledJar.Environment} if you are only interested in analyzing the compiled classes.
  *
- * <p>The source files can either be located on the classpath, in which case they are specified using the
+ * <p>
+ * The source files can either be located on the classpath, in which case they are specified using the
  * {@link #sources()} attribute, or on the file system, which are specified using the {@link #fileSources()} attribute.
  *
- * <p>This annotation is repeatable in case the sources are scattered across multiple locations.
+ * <p>
+ * This annotation is repeatable in case the sources are scattered across multiple locations.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 @Repeatable(AllJarSources.class)
 public @interface JarSources {
     /**
-     * The optional name of the jar file generated. This can be used to reference the generated jar file as
-     * a dependency of another compiled jar.
+     * The optional name of the jar file generated. This can be used to reference the generated jar file as a dependency
+     * of another compiled jar.
      *
-     * <p>If there is more than 1 jar source present on a field, only one of them can have a name specified which serves
-     * as the name for the jar file compiled.
+     * <p>
+     * If there is more than 1 jar source present on a field, only one of them can have a name specified which serves as
+     * the name for the jar file compiled.
      *
      * @see Dependencies#resolver()
      */
@@ -61,8 +64,8 @@ public @interface JarSources {
     String fileRoot() default "";
 
     /**
-     * Paths under the {@link #root()} denoting the locations on the classpath of the source files to compile.
-     * The paths are relative to the {@link #root()}.
+     * Paths under the {@link #root()} denoting the locations on the classpath of the source files to compile. The paths
+     * are relative to the {@link #root()}.
      */
     String[] sources() default {};
 

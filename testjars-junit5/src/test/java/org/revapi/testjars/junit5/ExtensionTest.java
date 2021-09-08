@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 Lukas Krejci
+ * Copyright 2018-2021 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,7 @@ class ExtensionTest {
     @JarResources(root = "/", resources = "resources/res2.txt")
     private CompiledJar jar;
 
-    @JarSources(root = "/", sources = {"TestClass.java", "TestAnotherClass.java"})
+    @JarSources(root = "/", sources = { "TestClass.java", "TestAnotherClass.java" })
     private CompiledJar.Environment env1;
 
     @JarSources(root = "/", sources = "TestClass.java")

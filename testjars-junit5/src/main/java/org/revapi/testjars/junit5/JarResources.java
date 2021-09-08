@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2021 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +26,8 @@ import java.lang.annotation.Target;
  * Similar to {@link JarSources} but specifies the locations of the resources to be put into the compiled jar along with
  * the compiled classes.
  *
- * <p>This annotation is repeatable in case the resources are scattered across multiple locations.
+ * <p>
+ * This annotation is repeatable in case the resources are scattered across multiple locations.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

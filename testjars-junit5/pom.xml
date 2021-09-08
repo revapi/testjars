@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright 2018-2020 Lukas Krejci
+    Copyright 2018-2021 Lukas Krejci
     and other contributors as indicated by the @author tags.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,50 +18,26 @@
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>testjars-parent</artifactId>
-        <groupId>org.revapi.testjars</groupId>
-        <version>0.2.1-SNAPSHOT</version>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
-
+    <parent>
+        <groupId>org.revapi.testjars</groupId>
+        <artifactId>testjars-parent</artifactId>
+        <version>0.3.0-SNAPSHOT</version>
+    </parent>
     <artifactId>testjars-junit5</artifactId>
-
     <properties>
         <automatic.module.name>org.revapi.testjars.junit5</automatic.module.name>
     </properties>
-
     <dependencies>
-        <dependency>
-            <groupId>org.revapi.testjars</groupId>
-            <artifactId>testjars-core</artifactId>
-            <version>0.2.1-SNAPSHOT</version>
-        </dependency>
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.1.0</version>
+            <version>${version.org.junit}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.revapi.testjars</groupId>
+            <artifactId>testjars-core</artifactId>
+            <version>0.3.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.junit.platform</groupId>
-                        <artifactId>junit-platform-surefire-provider</artifactId>
-                        <version>1.1.0</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.junit.jupiter</groupId>
-                        <artifactId>junit-jupiter-engine</artifactId>
-                        <version>5.1.0</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-        </plugins>
-    </build>
 </project>

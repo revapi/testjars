@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 Lukas Krejci
+ * Copyright 2018-2021 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,15 +26,25 @@ import org.revapi.testjars.CompilerManager;
 import org.revapi.testjars.DependencyResolver;
 
 /**
- * <p>This class can be used in tests to make it easy to compile custom source code into jars and then use the Java
+ * <p>
+ * This class can be used in tests to make it easy to compile custom source code into jars and then use the Java
  * Annotation processing API to analyze the compiled classes.
  *
- * <p>Simply declare a JUnit4 rule field:<pre><code>
+ * <p>
+ * Simply declare a JUnit4 rule field:
+ * 
+ * <pre>
+ * <code>
  *    {@literal @Rule}
  *     public Jar jar = new Jar();
- * </code></pre>
+ * </code>
+ * </pre>
  *
- * <p>and then use it in your test methods to compile and use code:<pre><code>
+ * <p>
+ * and then use it in your test methods to compile and use code:
+ * 
+ * <pre>
+ * <code>
  *     Jar.BuildOutput build = jar.from()
  *         .classPathSources("/", "my/package/MySource.java")
  *         .classPathResources("/", "META-INF/my-file-in-jar.txt")
@@ -46,11 +56,14 @@ import org.revapi.testjars.DependencyResolver;
  *     File jarFile = build.jarFile();
  *     Files.copy(jarFile.toPath(), Paths.get("/"));
  *     ...
- * </code></pre>
+ * </code>
+ * </pre>
  *
- * <p>This class is a thin wrapper around {@link CompilerManager} that integrates it with JUnit4.
+ * <p>
+ * This class is a thin wrapper around {@link CompilerManager} that integrates it with JUnit4.
  *
  * @author Lukas Krejci
+ * 
  * @since 0.1.0
  */
 public class Jar implements TestRule {
@@ -93,7 +106,9 @@ public class Jar implements TestRule {
      * Note that this file is not automatically deleted after a test as would a jar file built using the {@link #from()}
      * method. If you want this file to also be cleaned up, use the {@link #manage(File)} method.
      *
-     * @param jarFile the jar file to analyze
+     * @param jarFile
+     *            the jar file to analyze
+     * 
      * @return object using which the classes within the jar file can be inspected.
      */
     public CompiledJar of(File jarFile) {
@@ -103,7 +118,8 @@ public class Jar implements TestRule {
     /**
      * Given file will be automatically cleaned up after the test.
      *
-     * @param jarFile a file to delete once the test is finished.
+     * @param jarFile
+     *            a file to delete once the test is finished.
      */
     public void manage(File jarFile) {
         compilerManager.manage(jarFile);

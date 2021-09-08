@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 Lukas Krejci
+ * Copyright 2018-2021 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,11 +16,11 @@
  */
 package org.revapi.testjars.junit5;
 
-import org.revapi.testjars.DependencyResolver;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.Set;
+
+import org.revapi.testjars.DependencyResolver;
 
 /**
  * A helper class representing unknown dependencies. It never resolves anything successfully.

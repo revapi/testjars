@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 Lukas Krejci
+ * Copyright 2018-2021 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,8 +20,7 @@ import java.io.File;
 import java.util.Set;
 
 /**
- * Implementations of this interface can find jar files to add to the classpath when
- * compiling the test jar.
+ * Implementations of this interface can find jar files to add to the classpath when compiling the test jar.
  */
 public interface DependencyResolver {
 

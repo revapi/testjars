@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 Lukas Krejci
+ * Copyright 2018-2021 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,14 @@
  */
 package org.revapi.testjars.resolver.maven;
 
+import static java.util.Collections.singletonList;
+
+import java.io.File;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -29,14 +37,6 @@ import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.revapi.testjars.DependencyResolver;
 
-import java.io.File;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static java.util.Collections.singletonList;
-
 public class MavenDependencyResolver implements DependencyResolver {
     private final RepositorySystem repositorySystem;
     private final RepositorySystemSession session;
@@ -48,7 +48,8 @@ public class MavenDependencyResolver implements DependencyResolver {
         this.remoteRepositories = singletonList(MavenBootstrap.mavenCentral());
     }
 
-    public MavenDependencyResolver(RepositorySystem repositorySystem, RepositorySystemSession session, List<RemoteRepository> remoteRepositories) {
+    public MavenDependencyResolver(RepositorySystem repositorySystem, RepositorySystemSession session,
+            List<RemoteRepository> remoteRepositories) {
         this.repositorySystem = repositorySystem;
         this.session = session;
         this.remoteRepositories = remoteRepositories;
@@ -56,9 +57,7 @@ public class MavenDependencyResolver implements DependencyResolver {
 
     @Override
     public Set<File> resolve(String identifier) {
-        return resolveDependencies(new DefaultArtifact(identifier))
-                .map(Artifact::getFile)
-                .collect(Collectors.toSet());
+        return resolveDependencies(new DefaultArtifact(identifier)).map(Artifact::getFile).collect(Collectors.toSet());
     }
 
     private Stream<Artifact> resolveDependencies(Artifact artifact) {

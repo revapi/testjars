@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 Lukas Krejci
+ * Copyright 2018-2021 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,12 +16,10 @@
  */
 package org.revapi.testjars.junit5;
 
-import org.junit.jupiter.api.extension.AfterAllCallback;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.TestInstancePostProcessor;
-import org.revapi.testjars.CompiledJar;
-import org.revapi.testjars.CompilerManager;
-import org.revapi.testjars.DependencyResolver;
+import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -36,18 +34,21 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.Collections.emptySet;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toSet;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.TestInstancePostProcessor;
+import org.revapi.testjars.CompiledJar;
+import org.revapi.testjars.CompilerManager;
+import org.revapi.testjars.DependencyResolver;
 
 /**
- * A JUnit5 extension to dynamically compile jar files from specified sources and make them available for the tests
- * to access and analyze.
+ * A JUnit5 extension to dynamically compile jar files from specified sources and make them available for the tests to
+ * access and analyze.
  * <p>
- * <p>Each field with type {@link CompiledJar} is initialized to an instance containing the compilation results
- * of the sources and resources specified by the {@link JarSources} and {@link JarResources} annotations on the field.
- * The field can alternatively also have type {@link CompiledJar.Environment}.
+ * <p>
+ * Each field with type {@link CompiledJar} is initialized to an instance containing the compilation results of the
+ * sources and resources specified by the {@link JarSources} and {@link JarResources} annotations on the field. The
+ * field can alternatively also have type {@link CompiledJar.Environment}.
  */
 public final class CompiledJarExtension implements TestInstancePostProcessor, AfterAllCallback {
     private final CompilerManager compilerManager = new CompilerManager();
@@ -61,15 +62,12 @@ public final class CompiledJarExtension implements TestInstancePostProcessor, Af
     public void postProcessTestInstance(Object testInstance, ExtensionContext context) throws Exception {
         Class<?> testClass = context.getRequiredTestClass();
         List<Field> eligibleFields = findEligibleFields(testClass);
-        Map<String, Set<String>> depsTransitiveClosure = sortByDependenciesAndReturnTransitiveClosureOfDeps(eligibleFields)
-                .entrySet().stream()
-                .filter(e -> getJarName(e.getKey()) != null)
-                .collect(Collectors.toMap(
-                        e -> getJarName(e.getKey()),
-                        e -> e.getValue().stream()
-                                .map(CompiledJarExtension::getJarName)
-                                .filter(Objects::nonNull)
-                                .collect(Collectors.toSet())));
+        Map<String, Set<String>> depsTransitiveClosure = sortByDependenciesAndReturnTransitiveClosureOfDeps(
+                eligibleFields)
+                        .entrySet().stream().filter(e -> getJarName(e.getKey()) != null)
+                        .collect(Collectors.toMap(e -> getJarName(e.getKey()),
+                                e -> e.getValue().stream().map(CompiledJarExtension::getJarName)
+                                        .filter(Objects::nonNull).collect(Collectors.toSet())));
 
         Map<String, CompiledJar> namedResults = new HashMap<>();
 
@@ -100,8 +98,8 @@ public final class CompiledJarExtension implements TestInstancePostProcessor, Af
                     }
                 }
 
-                CompilerManager.JarBuilder bld = compilerManager.createJar(id ->
-                        resolvers.getOrDefault(id, CluelessDependencyResolver.INSTANCE).resolve(id));
+                CompilerManager.JarBuilder bld = compilerManager
+                        .createJar(id -> resolvers.getOrDefault(id, CluelessDependencyResolver.INSTANCE).resolve(id));
 
                 String name = null;
                 for (JarSources src : sources) {
@@ -110,8 +108,8 @@ public final class CompiledJarExtension implements TestInstancePostProcessor, Af
                     }
 
                     if (!src.fileRoot().isEmpty() && src.fileSources().length != 0) {
-                        bld.fileSources(new File(src.fileRoot()), Stream.of(src.fileSources())
-                                .map(File::new).toArray(File[]::new));
+                        bld.fileSources(new File(src.fileRoot()),
+                                Stream.of(src.fileSources()).map(File::new).toArray(File[]::new));
                     }
 
                     if (resolvers.size() == 1) {
@@ -129,15 +127,15 @@ public final class CompiledJarExtension implements TestInstancePostProcessor, Af
                     }
                 }
 
-                JarResources[] resources =  f.getAnnotationsByType(JarResources.class);
+                JarResources[] resources = f.getAnnotationsByType(JarResources.class);
                 for (JarResources rsc : resources) {
                     if (!rsc.root().isEmpty() && rsc.resources().length != 0) {
                         bld.classPathResources(rsc.root(), rsc.resources());
                     }
 
                     if (!rsc.fileRoot().isEmpty() && rsc.fileResources().length != 0) {
-                        bld.fileResources(new File(rsc.fileRoot()), Stream.of(rsc.fileResources())
-                                .map(File::new).toArray(File[]::new));
+                        bld.fileResources(new File(rsc.fileRoot()),
+                                Stream.of(rsc.fileResources()).map(File::new).toArray(File[]::new));
                     }
                 }
 
@@ -234,16 +232,13 @@ public final class CompiledJarExtension implements TestInstancePostProcessor, Af
             }
         }
 
-        return depsByField.entrySet().stream().collect(toMap(
-                Map.Entry::getKey,
-                e -> e.getValue().stream().map(names::get).collect(toSet())));
+        return depsByField.entrySet().stream()
+                .collect(toMap(Map.Entry::getKey, e -> e.getValue().stream().map(names::get).collect(toSet())));
     }
 
     private static List<Field> findEligibleFields(Class<?> testClass) {
-        return Stream.of(testClass.getDeclaredFields())
-                .filter(f -> !Modifier.isStatic(f.getModifiers()))
-                .filter(CompiledJarExtension::hasCompatibleType)
-                .filter(CompiledJarExtension::hasJarSources)
+        return Stream.of(testClass.getDeclaredFields()).filter(f -> !Modifier.isStatic(f.getModifiers()))
+                .filter(CompiledJarExtension::hasCompatibleType).filter(CompiledJarExtension::hasJarSources)
                 .collect(toList());
     }
 

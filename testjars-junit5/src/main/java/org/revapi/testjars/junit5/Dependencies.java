@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 Lukas Krejci
+ * Copyright 2018-2021 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,13 +16,13 @@
  */
 package org.revapi.testjars.junit5;
 
-import org.revapi.testjars.DependencyResolver;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.revapi.testjars.DependencyResolver;
 
 /**
  * Specifies the dependencies of the compiled sources.

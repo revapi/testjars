@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2021 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,7 +40,7 @@ final class ArchiveProbeObject extends SimpleJavaFileObject {
         try {
             return new URI(CLASS_NAME + ".java");
         } catch (URISyntaxException e) {
-            //doesn't happen
+            // doesn't happen
             return null;
         }
     }
@@ -73,8 +73,8 @@ final class ArchiveProbeObject extends SimpleJavaFileObject {
             return;
         }
 
-        //notice that we don't actually need to generate any complicated code. Having the classes on the classpath
-        //is enough for them to be present in the model captured during the annotation processing.
+        // notice that we don't actually need to generate any complicated code. Having the classes on the classpath
+        // is enough for them to be present in the model captured during the annotation processing.
         source = "@" + MarkerAnnotationObject.CLASS_NAME + "\npublic class " + CLASS_NAME + "\n{}\n";
     }
 }

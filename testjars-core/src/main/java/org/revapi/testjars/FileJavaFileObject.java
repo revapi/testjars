@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Lukas Krejci
+ * Copyright 2018-2021 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,9 +49,9 @@ final class FileJavaFileObject extends SimpleJavaFileObject {
         StringBuilder bld = new StringBuilder();
 
         Reader rdr = openReader(ignoreEncodingErrors);
-        char[] buffer = new char[512]; //our source files are small
+        char[] buffer = new char[512]; // our source files are small
 
-        for (int cnt; (cnt = rdr.read(buffer)) != -1; ) {
+        for (int cnt; (cnt = rdr.read(buffer)) != -1;) {
             bld.append(buffer, 0, cnt);
         }
 
