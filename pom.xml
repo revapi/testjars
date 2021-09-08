@@ -26,7 +26,7 @@
     </parent>
     <groupId>org.revapi.testjars</groupId>
     <artifactId>testjars-parent</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <inceptionYear>2018</inceptionYear>
     <organization>
@@ -57,7 +57,7 @@
     <scm>
         <connection>scm:git:git://github.com/revapi/testjars.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/revapi/testjars.git</developerConnection>
-        <tag>testjars-parent-0.3.0</tag>
+        <tag>HEAD</tag>
         <url>https://github.com/revapi/testjars</url>
     </scm>
     <issueManagement>
