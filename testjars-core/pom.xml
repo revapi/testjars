@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.revapi.testjars</groupId>
         <artifactId>testjars-parent</artifactId>
-        <version>0.3.0-SNAPSHOT</version>
+        <version>0.3.0</version>
     </parent>
     <artifactId>testjars-core</artifactId>
     <properties>
