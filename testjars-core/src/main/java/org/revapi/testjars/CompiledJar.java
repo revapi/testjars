@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 Lukas Krejci
+ * Copyright 2018-2021 Lukas Krejci
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,6 +35,7 @@ public final class CompiledJar {
     private final File classes;
     private final List<File> classpath;
     private final CompilerManager compiler;
+    private Environment environment;
 
     CompiledJar(File jarFile, File classes, File[] classpath, CompilerManager compiler) {
         this.jarFile = jarFile;
@@ -67,14 +68,18 @@ public final class CompiledJar {
 
     /**
      * @return an environment similar to java annotation processing round environment that gives access to
-     * {@link Elements} and {@link Types} instances that can be used to analyze the compiled classes.
+     *         {@link Elements} and {@link Types} instances that can be used to analyze the compiled classes.
      */
     public Environment analyze() {
-        try {
-            return compiler.probe(this);
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to analyze the compiled jar " + jarFile, e);
+        if (environment == null) {
+            try {
+                environment = compiler.probe(this);
+            } catch (IOException e) {
+                throw new IllegalStateException("Failed to analyze the compiled jar " + jarFile, e);
+            }
         }
+
+        return environment;
     }
 
     public static final class Environment {
